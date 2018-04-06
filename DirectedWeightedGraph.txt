@@ -1,0 +1,298 @@
+/**********************************************************
+ * File Name   : VertexType.h
+ * Author      : Hugo Yanez
+ * Course      : CS2200
+ * Date        : December 4, 2017
+ * Description : This program is header file of VertexType
+ *********************************************************/
+
+#ifndef VERTEXTYPE_H
+#define VERTEXTYPE_H
+
+#include <iostream>
+using namespace std;
+
+#include <queue>
+
+#include "ItemType.h"
+
+enum MARK { DEFAULT, VISITED, QUEUED };
+
+struct VertexType{
+   ItemType item;
+   MARK mark;
+
+};
+
+#endif
+
+
+/**********************************************************
+ * File Name   : DirectedWeightedGraph.h
+ * Author      : Hugo Yanez
+ * Course      : CS2200
+ * Date        : December 4, 2017
+ * Description : This program is a header file for 
+ *               DirectedWeightedGraph
+ *********************************************************/
+#ifndef DIRECTEDWEIGHTEDGRAPH_H
+#define DIRECTEDWEIGHTEDGRAPH_H
+
+#include <iostream>
+#include "VertexType.h"
+using namespace std;
+#include <queue>
+
+class DirectedWeightedGraph{
+
+public:
+   //Constructors
+   DirectedWeightedGraph();
+   DirectedWeightedGraph(int maxV); //specify the max. number of vertices.
+   
+   //Destructor 
+   ~DirectedWeightedGraph( );
+   
+   bool IsEmpty( ) const;
+   bool IsFull( ) const;
+   
+   void AddVertex(VertexType v); 
+   void DeleteVertex(VertexType);
+   
+   void AddEdge(VertexType v1, VertexType v2, int w);
+   bool DeleteEdge(VertexType v1, VertexType v2);
+   
+   int GetWeight(VertexType v1, VertexType v2);
+   
+   bool EdgeExists(VertexType v1, VertexType v2);
+   bool VertexExists(VertexType v);
+   
+   void MarkVertex(VertexType v, MARK m);//mark whether the vertex has been visited or queued
+
+   void GetNeighbors(VertexType v);   
+
+   void BreadthFirstTraversal(VertexType v);
+
+private:  
+   int numVertices;
+   int maxVertices;
+  
+   queue<VertexType> nq; 
+       
+   VertexType * vertices; //save all the vertices
+
+   int edges[50][50];   
+
+   int IndexIs(VertexType v);
+   
+     
+
+};
+#endif
+
+
+/**********************************************************
+ * File Name   : DirectedWeightedGraph.cpp
+ * Author      : Hugo Yanez
+ * Course      : CS2200
+ * Date        : November 29, 2017
+ * Description : This program is the implementation file of
+ *               the DirectedWeightedGraph header file.
+ *********************************************************/
+
+#include "DirectedWeightedGraph.h"
+#include <iostream>
+using namespace std;
+
+//Constructors
+DirectedWeightedGraph::DirectedWeightedGraph(){
+   numVertices = 0;
+   maxVertices = 50;
+   vertices = new VertexType[50];
+   //mark = DEFAULT;  
+}
+DirectedWeightedGraph::DirectedWeightedGraph(int maxV){
+   numVertices = 0;
+   maxVertices = maxV;
+   vertices = new VertexType[maxV];
+   //mark = DEFAULT;
+
+}
+
+//Destructor
+DirectedWeightedGraph::~DirectedWeightedGraph( ){
+   delete [] vertices;
+}
+
+bool DirectedWeightedGraph::IsEmpty( ) const{
+
+   return(numVertices == 0);
+}
+bool DirectedWeightedGraph::IsFull( ) const{
+
+   return(numVertices == maxVertices);
+}
+
+const int NULL_EDGE = 0;
+
+void DirectedWeightedGraph::AddVertex(VertexType v){
+   vertices[numVertices] = v;
+   for(int i = 0; i < numVertices; i++){
+      edges[numVertices][i] = NULL_EDGE;
+      edges[i][numVertices] = NULL_EDGE; 
+   }
+   numVertices++;
+}
+ 
+
+void DirectedWeightedGraph::DeleteVertex(VertexType vertex){
+   
+   if(VertexExists(vertex)){
+  
+      for(int i = 0; i < numVertices; i++){
+         if(EdgeExists(vertex, vertices[i]))
+            DeleteEdge(vertex, vertices[i]);
+      }       
+
+      int index = IndexIs(vertex);
+      int temp = numVertices--;
+     
+      vertices[index] = vertices[temp];
+      //numVertices--; 
+   }
+}
+
+void DirectedWeightedGraph::AddEdge(VertexType v1, VertexType v2, int w){
+  
+  int row = IndexIs(v1);
+  int col = IndexIs(v2);
+  edges[row][col] = w;
+
+}
+bool DirectedWeightedGraph::DeleteEdge(VertexType v1, VertexType v2){
+   int row = IndexIs(v1);
+   int col = IndexIs(v2);
+   
+   edges[row][col] = 0;   
+
+}
+
+int  DirectedWeightedGraph::GetWeight(VertexType v1, VertexType v2){
+  
+  int row = IndexIs(v1);
+  int col = IndexIs(v2);
+
+  return edges[row][col];
+
+}
+
+bool DirectedWeightedGraph::EdgeExists(VertexType v1, VertexType v2){
+   if(VertexExists(v1) && VertexExists(v2)){
+      int row = IndexIs(v1);
+      int col = IndexIs(v2);
+         
+      if(edges[row][col]>0){
+         return true;
+      }
+   }
+return false; 
+   
+}
+
+bool DirectedWeightedGraph::VertexExists(VertexType v){
+   for(int i = 0; i < numVertices; i++){
+      if(vertices[i].item.ComparedTo(v.item) == EQUAL)
+         return true;
+   }
+   return false;
+
+}
+
+int DirectedWeightedGraph::IndexIs(VertexType vertex){
+   
+   for(int i=0; i<numVertices; i++){
+      if(vertices[i].item.ComparedTo(vertex.item))
+         return i;
+        
+   }
+   return -1;
+}
+
+void DirectedWeightedGraph::MarkVertex(VertexType vertex, MARK M){
+   
+   vertex.mark = M;
+
+}
+
+void DirectedWeightedGraph::GetNeighbors(VertexType v){
+   int v1Index;
+   int v2Index;
+
+   v1Index = IndexIs(v);
+   for (v2Index = 0; v2Index < numVertices; v2Index++){
+      if (edges[v1Index][v2Index] != NULL_EDGE){
+         nq.push(vertices[v2Index]);
+         MarkVertex(vertices[v2Index], QUEUED);
+      }
+   }
+
+}
+
+void DirectedWeightedGraph::BreadthFirstTraversal(VertexType begin){
+   
+   begin.item.Print();
+   MarkVertex(begin, VISITED);
+   GetNeighbors(begin);
+
+   while(!nq.empty()){
+      VertexType next = nq.front();
+
+      next.item.Print();
+      MarkVertex(next, VISITED);
+      GetNeighbors(next);
+
+      nq.pop();
+   }
+
+}
+
+
+/**********************************************************
+  * File Name   : Lab5.cpp
+  * Author      : Hugo Yanez
+  * Course      : CS2200
+  * Date        : December 4, 2017
+  * Description : This program is the main driver test file
+  *********************************************************/
+
+#include "DirectedWeightedGraph.h"
+
+int main(){
+    DirectedWeightedGraph graph;
+
+    VertexType v1;
+    VertexType v2;
+    VertexType v3;
+    VertexType v4;
+    VertexType v5;
+  
+    v1.item.Initialize(14);
+    v2.item.Initialize(29);
+    v3.item.Initialize(36);
+    v4.item.Initialize(57);
+    v5.item.Initialize(41);
+
+    graph.AddVertex(v1);
+    graph.AddVertex(v2);
+    graph.AddVertex(v3);
+    graph.AddVertex(v4);
+    graph.AddVertex(v5);
+
+    graph.AddEdge(v1, v2, 1);
+    graph.AddEdge(v1, v4, 10);
+    graph.AddEdge(v3, v5, 100);
+    graph.AddEdge(v2, v3, 1000);
+    
+    graph.BreadthFirstTraversal(v1);
+
+}
