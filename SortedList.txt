@@ -1,0 +1,352 @@
+/**********************************************************
+ * File Name : ItemType.h
+ * Author    : Hugo Yanez
+ * Course    : CS2200
+ * Date      : September 25, 2017
+ * Description : Header file for itemtype               
+ *********************************************************/
+#ifndef ITEMTYPE_H
+#define ITEMTYPE_H
+
+#include <iostream>
+using namespace std;
+
+const int MAX_ITEM = 30;
+enum RelationType { EQUAL, UNEQUAL };
+
+class ItemType 
+{
+
+public:
+   //Default Constructor
+   ItemType(){
+};
+   RelationType ComparedTo( ItemType otherItem ) const
+   {
+      if( value == otherItem.value )
+         return (EQUAL);
+      else
+         return (UNEQUAL);
+   }
+
+   void Print() const
+   {
+      cout << value << endl;
+   }
+
+   void Initialize(char value)
+   {
+         this->value = value;
+   }
+   int key;
+
+private:
+   char value;
+};
+#endif
+
+
+/**********************************************************
+ * File Name : SortedType.h
+ * Author    : Hugo Yanez
+ * Course    : CISC2200
+ * Date      : October 5, 2017
+ * Description : This is the header file of the Sorted Type
+ *               class.
+ *********************************************************/
+#ifndef SORTEDTYPE_H
+#define SORTEDTYPE_H
+
+#include "ItemType.h"
+
+class SortedType
+{
+public:
+   SortedType();
+   
+   void MakeEmpty();
+   void InsertItem( ItemType item );
+   void DeleteItem( ItemType item );
+
+   bool IsFull() const;
+   bool IsEmpty() const;
+   int GetLength() const;
+   void RetrieveItem( ItemType& item, bool& found);
+
+   void ResetList();
+   void GetNextItem( ItemType& item );
+   void DecreaseCurrent();
+
+   void SplitList(ItemType item, SortedType& listOne, SortedType& listTwo);
+   void MergeList(SortedType& listOne, SortedType& listTwo);
+   void LuisMergeList(SortedType& listOne, SortedType& listTwo);
+private:
+   int length;
+   ItemType info[MAX_ITEM];
+   int currentPos;
+};
+
+#endif
+
+
+/**********************************************************
+ * File Name : SortedType.cpp
+ * Author    : Hugo Yanez
+ * Course    : CS2200
+ * Date      : September 25, 2017
+ * Description : Implementation file of Sorted Type.h
+ *********************************************************/
+
+#include "SortedType.h"
+
+//Default Constructor
+SortedType::SortedType()
+{
+   length = 0;
+}
+
+bool SortedType::IsFull()const
+{
+   return (length == MAX_ITEM);
+}
+
+int SortedType::GetLength()const
+{
+   return length;
+}
+
+bool SortedType::IsEmpty()const
+{
+   return (length == 0);
+}
+
+void SortedType::InsertItem(ItemType item)
+{
+   bool moreToSearch;
+   int location = 0;
+   moreToSearch = (location < length);
+   while(moreToSearch)
+   {
+      switch(item.ComparedTo(info[location]))
+      {
+         case LESS    : moreToSearch = false; 
+                        break;
+         case GREATER : location++;
+                        moreToSearch = (location < length);
+                        break;
+	 case EQUAL   : location++;
+		        moreToSearch = (location < length);
+		        break;
+      }
+   }
+   
+   for( int index = length; index > location; index--)
+      info[index] = info[index-1];
+   info[location] = item;
+   length++;
+}
+
+void SortedType::RetrieveItem(ItemType& item, bool& found)
+{
+   int midPoint;
+   int first =0;
+   int last = length-1;
+  
+   bool moreToSearch = (first <= last);
+   found = false;
+   while(moreToSearch && !found)
+   {
+      midPoint = (first+last)/2;
+      switch(item.ComparedTo(info[midPoint]))
+      {
+         case LESS    : last = midPoint-1;
+                        moreToSearch = (first <= last);
+                        break;
+         case GREATER : first = midPoint+1;
+                        moreToSearch = (first <= last);
+                        break;
+         case EQUAL   : found = true;
+                        item = info[midPoint];
+                        break;
+      }
+   }
+}
+
+void SortedType::DeleteItem(ItemType item)
+{
+   int location = 0;
+   while(item.ComparedTo(info[location])!= EQUAL)
+      location++;
+
+   for( int index = location +1; index < length; index++)
+      info[index-1] = info[index];
+   info[location] = item;
+   length--;
+}
+
+void SortedType::MakeEmpty()
+{
+   length = 0;
+}
+
+void SortedType::ResetList()
+{
+   currentPos = -1;
+}
+
+void SortedType::GetNextItem(ItemType& item)
+{
+   currentPos++;
+   item = info[currentPos];
+}
+
+void SortedType::DecreaseCurrent(){
+   if(currentPos > -1)
+      currentPos--;
+
+}
+
+void SortedType::SplitList(ItemType item, SortedType& listOne, SortedType& listTwo)
+{
+   cout << "SPLIT LIST FUNCTION" << endl;
+   currentPos =-1;
+   for(int i = 0; i <length; i++)
+   {
+      ItemType thisOne;
+      currentPos++;
+      thisOne = info[currentPos];
+      switch(item.ComparedTo(thisOne))
+      {
+         case LESS : 
+            listTwo.InsertItem(thisOne);
+            break;
+         case GREATER : 
+            listOne.InsertItem(thisOne);
+            break;
+         case EQUAL :
+            listOne.InsertItem(thisOne);
+            break;
+      }
+   }
+}
+
+void SortedType::MergeList(SortedType& listOne, SortedType& listTwo)
+{
+    cout <<"MERGE LIST FUNCTION" << endl;
+    SortedType Original;
+    ItemType thisOne, thisTwo, endAdder;
+    char bigOne;
+    int size1,size2;
+    if(listOne.GetLength() >= listTwo.GetLength()){
+	size1 = listTwo.GetLength();
+	size2 = listOne.GetLength();
+        bigOne = '1';
+    }
+    else{
+	size1 = listOne.GetLength();
+	size2 = listTwo.GetLength();
+        bigOne = '2';
+    }
+    for(int i = 0; i < size1; i++)
+    {
+	listOne.GetNextItem(thisOne);
+	listTwo.GetNextItem(thisTwo);
+         
+        switch(thisOne.ComparedTo(thisTwo))
+        {
+           case LESS    : 
+              Original.InsertItem(thisOne);
+              listTwo.DecreaseCurrent();
+           case EQUAL   :
+              Original.InsertItem(thisTwo);
+              listTwo.DecreaseCurrent();
+           case GREATER :
+              Original.InsertItem(thisTwo);
+              listOne.DecreaseCurrent();
+        } 	
+    }
+    for(int i = size1; i < size2; i++)
+    {
+	if(bigOne == '1')
+	    listOne.GetNextItem(endAdder);
+	else if(bigOne == '2')
+	    listTwo.GetNextItem(endAdder);
+	Original.InsertItem(endAdder);
+    } 
+    
+}
+
+
+/**********************************************************
+ * File Name : lab2.cpp
+ * Author    : Hugo Yanez
+ * Course    : CS2200
+ * Date      : September 25, 2017
+ * Description : Main driver file of class SortedType,
+ *               implementation of the class.
+ *********************************************************/
+
+
+#include "SortedType.h"
+
+void PrintList(SortedType& list)
+{
+   int length;
+   ItemType item;
+  
+   list.ResetList();
+   length = list.GetLength();
+   for(int counter = 1; counter <= length; counter++)
+   {
+      list.GetNextItem(item);
+      item.Print();
+   }
+}
+
+int main(){
+   SortedType L, listOne, listTwo;
+
+   ItemType a, b, c, d, e, f, g, h, key;
+
+   a.Initialize(0);
+   L.InsertItem(a);
+
+   b.Initialize(1);
+   L.InsertItem(b);
+
+   c.Initialize(2);
+   L.InsertItem(c);
+  
+   d.Initialize(3);
+   L.InsertItem(d);
+
+   e.Initialize(5);
+   L.InsertItem(e);
+  
+   f.Initialize(10);
+   L.InsertItem(f);
+  
+   g.Initialize(3);
+   L.InsertItem(g);
+
+   h.Initialize(12);
+   L.InsertItem(h);
+
+   key.Initialize(4);
+   cout << "Original List: " << endl;
+   PrintList(L);
+   cout << "List One: " << endl;
+   PrintList(listOne);
+   cout << "List Two: " << endl;
+   PrintList(listTwo);
+   
+   L.SplitList(key, listOne, listTwo);
+   cout << "List One after Split: " << endl;
+   PrintList(listOne);
+   cout << "List Two after Split: " << endl;
+   PrintList(listTwo);
+
+   L.MergeList(listOne, listTwo);
+   cout << "Merged List: " << endl;
+   PrintList(L);
+}
