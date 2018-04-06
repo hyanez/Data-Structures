@@ -1,0 +1,328 @@
+Script started on 2017-09-25 22:25:31-0400
+torm:~/CISC2200/labshyanez@storm labs]$ cat UnsortedType.h UnsortedType.cpp ItemType.h lab1.cpp
+/**********************************************************
+ * File Name   : UnsortedType.h
+ * Author      : Hugo Yanez
+ * Course      : CISC2200
+ * Date        : September 25, 2017
+ * Description : Header file containg unsorted list array
+ *********************************************************/
+#ifndef UNSORTEDTYPE_H
+#define UNSORTEDTYPE_H
+
+#include "ItemType.h"
+
+class UnsortedType
+{
+
+public:
+   UnsortedType(); //Default Constructor
+
+   void MakeEmpty();
+   void InsertItem( ItemType item );
+   void DeleteItem( ItemType item );
+   
+   bool IsFull()const;
+   bool IsEmpty()const;
+   int GetLength()const;
+   void RetrieveItem( ItemType & item, bool & found );
+
+   void ResetList();
+   void GetNextItem( ItemType& item );
+
+   void SplitList(ItemType item, UnsortedType& listOne, UnsortedType& listTwo);
+   void MergeList(UnsortedType& listOne, UnsortedType& listTwo);
+
+private:
+   int length;
+   ItemType info[MAX_ITEM];
+   int currentPos;
+};
+
+#endif
+
+/**********************************************************
+ * File Name   : UnsortedType.cpp
+ * Author      : Hugo Yanez
+ * Course      : CISC2200
+ * Date        : September 25, 2017
+ * Description : This program shows how to implement 
+ *               unsorted lists by array.
+ *********************************************************/
+
+#include "UnsortedType.h"
+
+//Default Constructor
+UnsortedType::UnsortedType()
+{
+   length = 0;
+}
+
+bool UnsortedType::IsFull() const
+{
+   return (length == MAX_ITEM);
+}
+
+bool UnsortedType::IsEmpty() const
+{
+   return(length == 0);
+}
+
+int UnsortedType::GetLength() const
+{
+   return length;
+}
+
+void UnsortedType::InsertItem(ItemType item)
+{
+   info[length] = item;
+   length++;
+}
+
+void UnsortedType::RetrieveItem(ItemType& item, bool& found)
+{
+   
+   bool moreToSearch;
+   int location = 0;
+   found = false;
+   moreToSearch = (location < length);
+   while( moreToSearch && !found)
+   {
+      switch( item.ComparedTo(info[location]))
+      {
+         case LESS:
+         case GREATER:
+            location++;
+            moreToSearch = (location < length);
+            break;
+         case EQUAL:
+            found = true;
+            item = info[location];
+            break;
+      }
+   }
+}
+
+void UnsortedType::DeleteItem ( ItemType item )
+{
+   int location = 0;
+
+   while (item.ComparedTo(info[location]) != EQUAL )
+      location++;
+
+   info[location] = info[length-1];
+   length--;
+
+}
+
+void UnsortedType::MakeEmpty()
+{
+   length = 0;
+}
+
+void UnsortedType::ResetList()
+{
+   currentPos = -1;
+}
+
+void UnsortedType::GetNextItem( ItemType& item )
+{
+   currentPos++;
+   item = info[currentPos];
+}
+
+void UnsortedType::SplitList(ItemType item, UnsortedType& listOne, UnsortedType& listTwo)
+{
+   for(int i =0; i < GetLength(); i++)
+   {   
+      switch (item.ComparedTo(info[i]))
+      {
+         case LESS : 
+            listTwo.InsertItem(info[i]);
+            break;
+         case GREATER :
+            listOne.InsertItem(info[i]);
+            break;
+         case EQUAL :
+            listOne.InsertItem(info[i]); 
+            break;
+      }
+          
+   }
+}
+
+void UnsortedType::MergeList(UnsortedType& listOne, UnsortedType& listTwo)
+{
+
+   int lengthOne, lengthTwo;
+
+   lengthOne = listOne.GetLength();
+   lengthTwo = listTwo.GetLength();
+
+   for(int i = 0; i < lengthTwo; i++)
+   {  
+      listOne.InsertItem(info[i])
+       
+   }
+   for(int i = 0; i < lengthOne; i++)
+   {
+      listTwo.InsertItem(info[i])
+   }
+   
+    
+
+
+}
+
+/**********************************************************
+ * File Name : ItemType.h
+ * Author    : Hugo Yanez
+ * Course    : CS2200
+ * Date      : September 25, 2017
+ * Description : Header file for itemtype               
+ *********************************************************/
+#ifndef ITEMTYPE_H
+#define ITEMTYPE_H
+
+#include <iostream>
+using namespace std;
+
+const int MAX_ITEM = 10;
+enum RelationType { LESS, EQUAL, GREATER };
+
+class ItemType 
+{
+
+public:
+
+   ItemType(){} //Default Constructor
+   
+   RelationType ComparedTo( ItemType otherItem ) const
+   {
+      if( value < otherItem.value )
+         return LESS;
+      else if( value > otherItem.value )
+         return GREATER;
+      else 
+         return EQUAL;
+   }
+
+   void Print() const
+   {
+      cout << value << endl;
+   }
+
+   void Initialize(int value)
+   {
+      this->value = value;
+   }
+   int key;
+
+private:
+   int value;
+};
+#endif
+/**********************************************************
+ * File Name   : TestUnsortedType.cpp
+ * Author      : Hugo Yanez
+ * Course      : CISC2200
+ * Date        : September 25, 2017
+ * Description : This program tests the UnsortedType class
+ *               and ItemType class.
+ *********************************************************/
+
+#include "ItemType.h"
+#include "UnsortedType.h"
+
+void PrintList( UnsortedType& list )
+{
+   int length;
+   ItemType item;
+
+   list.ResetList();
+   length = list.GetLength();
+   for(int i = 1; i <= length; i++)
+   {
+      list.GetNextItem(item);
+      item.Print();
+   }
+} 
+
+int main()
+{
+   UnsortedType L, listOne, listTwo;
+   ItemType key;
+   key.Initialize(4);   
+   bool found;
+  
+   ItemType a;
+   a.Initialize(1);
+   L.InsertItem(a);
+
+   ItemType b;
+   b.Initialize(3);
+   L.InsertItem(b);
+
+   ItemType c;
+   c.Initialize(5);
+   L.InsertItem(c);
+
+   ItemType d;
+   d.Initialize(2);
+   L.InsertItem(d);
+
+   ItemType e;
+   e.Initialize(10);
+   L.InsertItem(e);
+
+   ItemType f;
+   f.Initialize(12);
+   L.InsertItem(f);
+
+   ItemType g;
+   g.Initialize(0);
+   L.InsertItem(g);
+  
+   cout << "List before split: " << endl;
+   PrintList(L);
+ 
+   L.SplitList(key, listOne, listTwo);
+   
+   cout << "List One:" << endl;
+   PrintList(listOne);
+   cout << "List Two:" << endl;
+   PrintList(listTwo);
+   
+   L.MergeList(listOne, listTwo);
+   
+   cout << "List after merging: " << endl;
+   PrintList(L);   
+   
+
+   return 0;
+}
+
+torm:~/CISC2200/labshyanez@storm labs]$ g++ UnsortedType.cpplab1.cpp -o lab1.out
+torm:~/CISC2200/labshyanez@storm labs]$ ./lab1.out
+List before split: 
+1
+3
+5
+2
+10
+12
+0
+List One:
+1
+3
+2
+0
+List Two:
+5
+10
+12
+Segmentation fault (core dumped)
+torm:~/CISC2200/labshyanez@storm labs]$ exit
+exit
+
+Script done on 2017-09-25 22:27:28-0400
